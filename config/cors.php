@@ -20,7 +20,8 @@ return [
     'allowed_methods' => ['*'],
 
     // 'allowed_origins' => ['*'],
-      'allowed_origins' => ['seppedu.com' || 'http://localhost:3000'],
+      'allowed_origins' => ['https://seppedu.com' ] || ['seppedu.com' ] ,
+      // 'allowed_origins' => ['seppedu.com' || 'http://localhost:3000'],
 
     'allowed_origins_patterns' => [],
 
