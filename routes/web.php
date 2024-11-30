@@ -4,11 +4,24 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 
+//older than 30/11/2024
+// Route::get('/{any}', function () {
+//     return view('app');
+// })->where('any', '.*');
 
-Route::get('/{any}', function () {
-    return view('app');
+//
+Route::get('/', function () {
+    return view('welcome');
+});
+
+
+Route::get('/app/{any}', function () {
+    return file_get_contents(public_path('react/index.html'));
 })->where('any', '.*');
 
+Route::get('/dbconn', function () {
+    return view('dbconn');
+});
 //  Route::view('/{path?}', 'layouts.app')
 //     ->where('path', '.*')
 //     ->name('react');
@@ -44,7 +57,7 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 // Catch-all route for React Router to point to the react frontend
 
 
-Route::get('password/reset/{token}', 'App\Http\Controllers\Auth\ResetPasswordController@showResetForm')->name('password.reset');
-Route::post('password/reset', 'App\Http\Controllers\Auth\ResetPasswordController@reset')->name('password.update');
+// Route::get('password/reset/{token}', 'App\Http\Controllers\Auth\ResetPasswordController@showResetForm')->name('password.reset');
+// Route::post('password/reset', 'App\Http\Controllers\Auth\ResetPasswordController@reset')->name('password.update');
 
 //
