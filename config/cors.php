@@ -7,10 +7,12 @@ return [
     'allowed_methods' => ['*'], 
 
     'allowed_origins' => ['https://seppedu.com', 'https://api.seppedu.com'], 
-
+    
     'allowed_origins_patterns' => [], 
 
-    'allowed_headers' => ['*'], 
+    'allowed_headers' => [':authority:', ':method:', ':path:', ':scheme:'], // this is the line i needed to update to solve the issue.
+
+    // 'allowed_headers' => ['*'], 
 
     'exposed_headers' => [], 
 
