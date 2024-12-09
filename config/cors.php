@@ -6,7 +6,7 @@ return [
 
     'allowed_methods' => ['*'], 
 
-    'allowed_origins' => ['https://seppedu.com', 'https://api.seppedu.com'], 
+    'allowed_origins' => ['https://seppedu.com', 'https://localhost:3000'], 
     
     'allowed_origins_patterns' => [], 
 

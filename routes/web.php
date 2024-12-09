@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 // })->where('any', '.*');
 
 //
+//
 Route::get('/', function () {
     return view('welcome');
 });
