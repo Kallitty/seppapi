@@ -1,0 +1,12 @@
+// Import Bootstrap's Sass files
+@import "~bootstrap/scss/bootstrap";
+
+// Your custom styles
+body {
+    background-color: #dc6dd6;
+}
+// Fonts
+@import url("https://fonts.bunny.net/css?family=Nunito");
+
+// Variables
+@import "variables";
