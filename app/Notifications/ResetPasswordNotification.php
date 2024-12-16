@@ -2,7 +2,6 @@
 
 namespace App\Notifications;
 
-//to puhs
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
