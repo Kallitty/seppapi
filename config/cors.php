@@ -21,7 +21,7 @@ return [
 
     // Allow both local development and production domains
     'allowed_origins' => [
-        'http://localhost:3000',
+        // 'http://localhost:3000',
         'https://seppedu.com',
         'https://api.seppedu.com'
     ],
