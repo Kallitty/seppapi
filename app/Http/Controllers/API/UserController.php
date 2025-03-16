@@ -100,6 +100,30 @@ class UserController extends Controller
         return response()->json($user);
     }
 
+     public function blockUser(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        // Prevent blocking admin users
+        if ($user->role_as === 1) {
+            return response()->json(['message' => 'You cannot block an admin user'], 403);
+        }
+
+        // Toggle the status
+        $user->status = $user->status === 1 ? 0 : 1;
+        $user->save();
+
+        return response()->json([
+            'message' => $user->status === 1 ? 'User unblocked successfully' : 'User blocked successfully',
+            'user' => $user,
+        ]);
+    }
+
+
     public function destroy($id)
     {
         $user = User::findOrFail($id);
@@ -108,7 +132,4 @@ class UserController extends Controller
         return response()->json(null, 204);
     }
 }
-
-
-
 
