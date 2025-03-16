@@ -64,6 +64,14 @@ class AuthController extends Controller
             'message'=>'Invalid Credentials.',
         ] );
        }else{
+            if ($user->status == 0) {  // Assuming 0 means blocked
+                            return response()->json([
+                                'status' => 403,
+            'message' => 'Your account is blocked. Please contact the administrator if you feel this is an error.',
+            'username' => $user->name, // Include username for consistency
+            'role' => $user->role_as == 1 ? 'admin' : '', // Include role for consistency
+                            ]);
+                        }
         if($user->role_as==1)//1 =admin 
         {
             $role= 'admin';
