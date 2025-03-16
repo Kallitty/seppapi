@@ -16,7 +16,7 @@ class QuizController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'duration' => 'required|integer|min:1',
+            'duration' => 'sometimes|integer|min:1',
             'questions' => 'required|array',
             'questions.*.question' => 'required|string',
             'questions.*.type' => 'required|string',
@@ -31,6 +31,8 @@ class QuizController extends Controller
             'duration' => $request->duration,
         ]);
 
+
+        
         foreach ($request->questions as $questionData) {
             $question = new Question();
             $question->question = $questionData['question'];
@@ -38,13 +40,19 @@ class QuizController extends Controller
             $question->correct_answer = $questionData['correctAnswer'];
             $question->quiz_id = $quiz->id;
 
-            // if (isset($questionData['icon']) && $questionData['icon']->isValid()) {
-            //     $path = $questionData['icon']->store('public/icons');
-            //     $iconName = basename($path);
-            //     $frontendPath = public_path('../../sepp/seppfrontend/public/icons');
-            //     $questionData['icon']->move($frontendPath, $iconName);
-            //     $question->icon = $iconName;
-            // }
+        if (isset($questionData['icon'])) {
+    if ($questionData['icon'] instanceof \Illuminate\Http\UploadedFile) {
+        // If it's a new file, store it
+        $path = $questionData['icon']->store('public/icons');
+        $question->icon = str_replace('public/', 'storage/', $path);
+    } else {
+        // If it's a string (existing image path), keep it
+        $question->icon = $questionData['icon'];
+    }
+}
+
+
+            
                 if (isset($questionData['icon']) && $questionData['icon']->isValid()) {
                 $path = $questionData['icon']->store('public/icons');
                 $iconName = basename($path);
@@ -102,100 +110,113 @@ class QuizController extends Controller
         ]);
     }
 
-   public function update(Request $request, $id)
+
+     public function view($id)
+    {
+        $quiz = Quiz::with('questions.choices')->find($id);
+        return response()->json([
+            'title' => $quiz->title,
+            'duration' => $quiz->duration,
+            'questions' => $quiz->questions->map(function ($question) {
+                return [
+                    'id' => $question->id,
+                    'type' => 'MCQs',
+                    'correctAnswer' => $question->correct_answer ? trim($question->correct_answer) : '',
+                    'isVisible' => $question->is_visible,
+                    'icon' => $question->icon ? asset('storage/icons/' . $question->icon) : null,
+                    'question' => $question->question,
+                    'choices' => $question->choices->pluck('choice')->map(function ($choice) {
+                        return trim($choice);
+                    })->toArray(),
+                ];
+            })
+        ]);
+    }
+
+
+
+public function update(Request $request, $id)
 {
     Log::info('Received update request', ['data' => $request->all()]);
 
     $request->validate([
         'title' => 'sometimes|string|max:255',
-        'duration' => 'sometimes|integer',
+        'duration' => 'nullable|integer',
         'questions' => 'sometimes|array',
         'questions.*.id' => 'sometimes|integer|exists:questions,id',
-        'questions.*.question' => 'sometimes|string',
-        'questions.*.type' => 'sometimes|string',
-        'questions.*.correctAnswer' => 'sometimes|string',
-        'questions.*.choices' => 'sometimes|array',
-        'questions.*.choices.*' => 'sometimes|string',
-        'questions.*.icon' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+        'questions.*.question' => 'required|string',
+        'questions.*.type' => 'required|string',
+        'questions.*.correctAnswer' => 'required|string',
+        'questions.*.choices' => 'required|array',
+        'questions.*.choices.*' => 'required|string',
+        'questions.*.icon' => [
+            'nullable',
+            function ($attribute, $value, $fail) {
+                if (!($value instanceof \Illuminate\Http\UploadedFile || is_string($value))) {
+                    $fail('The ' . $attribute . ' field must be a file or an existing image path.');
+                }
+            },
+            function ($attribute, $value, $fail) {
+                if ($value instanceof \Illuminate\Http\UploadedFile) {
+                    $allowedMimeTypes = ['image/jpeg', 'image/png'];
+                    $mimeType = $value->getMimeType();
+                    if (!in_array($mimeType, $allowedMimeTypes)) {
+                        $fail('The ' . $attribute . ' field must be a file of type: jpg, jpeg, png.');
+                    }
+                }
+            },
+        ],
     ]);
 
     try {
         $quiz = Quiz::findOrFail($id);
         Log::info('Quiz found', ['quiz_id' => $quiz->id]);
 
-        if ($request->has('title')) {
-            $quiz->title = $request->title;
-            $quiz->save();
-            Log::info('Quiz title updated', ['title' => $quiz->title]);
-        }
-        if ($request->has('duration')) {
-            $quiz->duration = $request->duration;
-            $quiz->save();
-            Log::info('Quiz duration updated', ['duration' => $quiz->duration]);
-        }
+        $quiz->title = $request->title;
+        $quiz->duration = $request->duration;
+        $quiz->save();
 
         if ($request->has('questions')) {
             $existingQuestionIds = $quiz->questions->pluck('id')->toArray();
             $updatedQuestionIds = [];
-            
 
-           foreach ($request->questions as $questionData) {
-    $question = isset($questionData['id']) ? Question::find($questionData['id']) : new Question();
+            foreach ($request->questions as $questionData) {
+                $question = isset($questionData['id']) ? Question::find($questionData['id']) : new Question();
 
-    if (!isset($questionData['question']) || empty(trim($questionData['question']))) {
-        Log::warning('Missing or empty question text', ['data' => $questionData]);
-        continue; // Skip this question if question text is missing or empty
-    }
+                $question->question = $questionData['question'];
+                $question->type = $questionData['type'];
+                $question->correct_answer = $questionData['correctAnswer'];
+                $question->quiz_id = $quiz->id;
 
-    $question->question = $questionData['question'];
-    $question->type = $questionData['type'] ?? $question->type;
-    $question->correct_answer = $questionData['correctAnswer'] ?? $question->correct_answer;
-    $question->quiz_id = $quiz->id;
+                // Handle the icon field
+                if (isset($questionData['icon'])) {
+                    if ($questionData['icon'] instanceof \Illuminate\Http\UploadedFile) {
+                        // Store the new image and save only the filename
+                        $path = $questionData['icon']->store('public/icons');
+                        $question->icon = basename($path); // Save only the filename
+                    } elseif (is_string($questionData['icon'])) {
+                        // Retain the existing filename (not the full URL)
+                        $question->icon = basename($questionData['icon']);
+                    }
+                }
 
-    if (isset($questionData['icon']) && is_file($questionData['icon']) && $questionData['icon']->isValid()) {
-        $path = $questionData['icon']->store('public/icons');
-        $iconName = basename($path);
-        $frontendPath = public_path('../../sepp/seppfrontend/public/icons');
-        $questionData['icon']->move($frontendPath, $iconName);
-        $question->icon = $iconName;
-        Log::info('Icon uploaded', ['icon' => $iconName]);
-    }
+                $question->save();
+                Log::info('Question saved', ['question_id' => $question->id]);
+                $updatedQuestionIds[] = $question->id;
 
-    $question->save();
-    Log::info('Question saved', ['question_id' => $question->id]);
-    $updatedQuestionIds[] = $question->id;
-
-    // Handle choices similarly
-
-
-
-
-                if (isset($questionData['choices'])) {
-                    $existingChoiceIds = $question->choices->pluck('id')->toArray();
-                    $updatedChoiceIds = [];
-
-                    foreach ($questionData['choices'] as $choiceValue) {
+                // Update choices
+                $question->choices()->delete(); // Remove existing choices
+                foreach ($questionData['choices'] as $choiceValue) {
+                    if (!empty($choiceValue)) {
                         $choice = new Choice();
-
-                        if (!empty($choiceValue)) {
-                            $choice->choice = $choiceValue;
-                            Log::info('Choice data', ['choice' => $choiceValue]);
-                        } else {
-                            Log::warning('Missing choice data', ['question_id' => $question->id, 'choiceData' => $choiceValue]);
-                            continue; // Skip if choice is not set
-                        }
-
+                        $choice->choice = $choiceValue;
                         $choice->question_id = $question->id;
                         $choice->save();
-                        Log::info('Choice saved', ['choice_id' => $choice->id]);
-                        $updatedChoiceIds[] = $choice->id;
                     }
-
-                    $choicesToDelete = array_diff($existingChoiceIds, $updatedChoiceIds);
-                    Choice::destroy($choicesToDelete);
                 }
             }
 
+            // Delete questions that are no longer present
             $questionsToDelete = array_diff($existingQuestionIds, $updatedQuestionIds);
             Question::destroy($questionsToDelete);
         }
@@ -206,8 +227,6 @@ class QuizController extends Controller
         return response()->json(['message' => 'Failed to update quiz', 'error' => $e->getMessage()], 500);
     }
 }
-
-
 
     public function destroy($id)
     {
