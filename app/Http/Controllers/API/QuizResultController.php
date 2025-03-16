@@ -10,18 +10,58 @@ use Illuminate\Support\Facades\Auth;
 
 class QuizResultController extends Controller
 {
+public function getUserResults(Request $request)
+{
+    $userId = $request->user()->id;
+    $quizResults = QuizResult::with('quiz') // Eager load the quiz relationship
+        ->where('user_id', $userId)
+        ->get();
 
-    public function getUserResults(Request $request)
-    {
-        $userId = $request->user()->id;
-        $quizResults = QuizResult::where('user_id', $userId)->get();
+    // Map the results to include the quiz title
+    $results = $quizResults->map(function ($result) {
+        return [
+            'id' => $result->id,
+            'quiz_id' => $result->quiz_id,
+            'quiz_title' => $result->quiz ? $result->quiz->title : 'Deleted Quiz', // Handle null quiz
+            'score' => $result->score,
+            'correct_answers' => $result->correct_answers,
+            'wrong_answers' => $result->wrong_answers,
+            'correct_answers_percentage' => $result->correct_answers_percentage,
+        ];
+    });
 
-        return response()->json([
-            'status' => 200,
-            'results' => $quizResults
-        ]);
-    }
+    return response()->json([
+        'status' => 200,
+        'results' => $results,
+    ]);
+}
 
+public function getAllResults(Request $request)
+{
+    $quizResults = QuizResult::with(['quiz', 'user']) // Eager load quiz and user relationships
+        ->get();
+
+    // Map the results to include user details and quiz title
+    $results = $quizResults->map(function ($result) {
+        return [
+            'id' => $result->id,
+            'user_id' => $result->user_id,
+            'user_name' => $result->user ? $result->user->name : 'Unknown User', // Handle null user
+            'user_email' => $result->user ? $result->user->email : 'Unknown Email', // Handle null user
+            'quiz_id' => $result->quiz_id,
+            'quiz_title' => $result->quiz ? $result->quiz->title : 'Unknown Quiz', // Handle null quiz
+            'score' => $result->score,
+            'correct_answers' => $result->correct_answers,
+            'wrong_answers' => $result->wrong_answers,
+            'correct_answers_percentage' => $result->correct_answers_percentage,
+        ];
+    });
+
+    return response()->json([
+        'status' => 200,
+        'results' => $results,
+    ]);
+}
     public function startQuiz(Request $request)
     {
         // Create a new quiz attempt
@@ -46,7 +86,7 @@ class QuizResultController extends Controller
             'correctAnswersPercentage' => 'required|numeric',
         ]);
 
-        $quizResult = new QuizResult();
+        $quizResult = new QuizResult(); 
         $quizResult->user_id = Auth::id();
         $quizResult->quiz_id = $request->quiz_id;
         $quizResult->score = $request->score;
