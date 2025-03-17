@@ -35,7 +35,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/user-quiz-results', [QuizResultController::class, 'getUserResults']);
 
     Route::get('/quizzes', [QuizController::class, 'index']);
-    Route::get('/quizzes/{id}', [QuizController::class, 'show']);
+    Route::get('/quizzes/{id}', [QuizController::class, 'show']);  //here
 
     Route::post('/user/profile-picture', [UserController::class, 'updateProfilePicture']);
     Route::get('/user', [UserController::class, 'getUser']);
@@ -45,12 +45,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
 Route::middleware(['auth:sanctum', 'isAPIAdmin'])->group(function () {
     Route::get('/admin/dashboard', [AuthController::class, 'dashboard']);
 
+   
+
     // Quiz management
     Route::post('/create-quiz', [QuizController::class, 'store']);
     
-    
-    Route::put('/quizzes/{id}', [QuizController::class, 'update']);
+       Route::get('/view-quizzes/{id}', [QuizController::class, 'view']); 
+    Route::post('/update-quizzes/{id}', [QuizController::class, 'update']); //here
     Route::delete('/quizzes/{id}', [QuizController::class, 'destroy']);
+     Route::get('/allquiz-results', [QuizResultController::class, 'getAllResults']);
 
     //User Management
 
@@ -58,6 +61,8 @@ Route::middleware(['auth:sanctum', 'isAPIAdmin'])->group(function () {
     Route::post('users', [UserController::class, 'store']);
     Route::put('users/{id}', [UserController::class, 'update']);
     Route::delete('users/{id}', [UserController::class, 'destroy']);
+    Route::post('/users/{id}/block', [UserController::class, 'blockUser']);
+
 
 
     // Category management
