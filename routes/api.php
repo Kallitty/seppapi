@@ -34,12 +34,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/store-quiz-results', [QuizResultController::class, 'storeQuizResults']);
     Route::get('/user-quiz-results', [QuizResultController::class, 'getUserResults']);
 
-    Route::get('/quizzes', [QuizController::class, 'index']);
-    Route::get('/quizzes/{id}', [QuizController::class, 'show']);  //here
+    Route::get('/quizzesindex', [QuizController::class, 'index']);
+    // Route::get('/quizzes/{id}', [QuizController::class, 'show']);  //here
 
     Route::post('/user/profile-picture', [UserController::class, 'updateProfilePicture']);
     Route::get('/user', [UserController::class, 'getUser']);
+
+ //03043025
+    Route::get('/quizzes', [QuizController::class, 'getVisibleQuizzes']);
+     Route::get('/quizzes/{id}', [QuizController::class, 'show']); 
 });
+ 
 
 // Routes accessible only by admin users
 Route::middleware(['auth:sanctum', 'isAPIAdmin'])->group(function () {
@@ -50,10 +55,15 @@ Route::middleware(['auth:sanctum', 'isAPIAdmin'])->group(function () {
     // Quiz management
     Route::post('/create-quiz', [QuizController::class, 'store']);
     
-       Route::get('/view-quizzes/{id}', [QuizController::class, 'view']); 
+    Route::get('/view-quizzes/{id}', [QuizController::class, 'view']); 
     Route::post('/update-quizzes/{id}', [QuizController::class, 'update']); //here
     Route::delete('/quizzes/{id}', [QuizController::class, 'destroy']);
-     Route::get('/allquiz-results', [QuizResultController::class, 'getAllResults']);
+    Route::get('/allquiz-results', [QuizResultController::class, 'getAllResults']);
+    
+        //03043025
+    Route::patch('/quizzes/{quiz}/visibility', [QuizController::class, 'updateVisibility']);
+  
+
 
     //User Management
 
