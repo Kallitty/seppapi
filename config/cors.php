@@ -20,11 +20,13 @@ return [
     'allowed_methods' => ['*'],
 
     // Allow both local development and production domains
-    'allowed_origins' => [
-        // 'http://localhost:3000',
-        'https://seppedu.com',
-        'https://api.seppedu.com'
-    ],
+
+     'allowed_origins' => ['*'],
+    // 'allowed_origins' => [
+    //     // 'http://localhost:3000',
+    //     'https://seppedu.com',
+    //     'https://api.seppedu.com'
+    // ],
 
     'allowed_origins_patterns' => [],
 
