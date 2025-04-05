@@ -110,6 +110,33 @@ class QuizController extends Controller
         ]);
     }
 
+//     public function show($id)
+// {
+//     $quiz = Quiz::with('questions.choices')->find($id);
+    
+//     if (!$quiz) {
+//         return response()->json(['message' => 'Quiz not found'], 404);
+//     }
+    
+//     return response()->json([
+//         'title' => $quiz->title,
+//         'duration' => $quiz->duration,
+//         'questions' => $quiz->questions->map(function ($question) {
+//             return [
+//                 'id' => $question->id,
+//                 'type' => 'MCQs',
+//                 'correctAnswer' => $question->correct_answer ? trim($question->correct_answer) : '',
+//                 'isVisible' => $question->is_visible,
+//                 'icon' => $question->icon ? asset('storage/icons/' . $question->icon) : null,
+//                 'question' => $question->question,
+//                 'choices' => $question->choices->pluck('choice')->map(function ($choice) {
+//                     return trim($choice);
+//                 })->toArray(),
+//             ];
+//         })
+//     ]);
+// }
+
 
      public function view($id)
     {
@@ -226,6 +253,26 @@ public function update(Request $request, $id)
         Log::error('Failed to update quiz', ['error' => $e->getMessage()]);
         return response()->json(['message' => 'Failed to update quiz', 'error' => $e->getMessage()], 500);
     }
+}
+
+    public function updateVisibility(Quiz $quiz, Request $request)
+{
+    $request->validate([
+        'is_visible' => 'required|boolean'
+    ]);
+
+    $quiz->update([
+        'is_visible' => $request->is_visible
+    ]);
+
+    return response()->json($quiz);
+}
+
+
+public function getVisibleQuizzes()
+{
+    $quizzes = Quiz::where('is_visible', true)->orderBy('created_at', 'desc')->get();
+    return response()->json($quizzes);
 }
 
     public function destroy($id)
